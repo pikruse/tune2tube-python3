@@ -16,6 +16,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
 # or implied. See the License for the specific language governing
 # permissions and limitations under the License.
+import os, sys
+sys.path.append('./')
 
-from tune2tube import Tune2Tube
-from tunetags import TuneTags
+from .t2t2 import Tune2Tube
+from .tunetags import TuneTags

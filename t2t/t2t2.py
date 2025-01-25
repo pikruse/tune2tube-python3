@@ -24,7 +24,7 @@ import subprocess
 import sys
 import re
 import os
-import httplib
+import http.client
 import httplib2
 import random
 import time
@@ -38,8 +38,12 @@ from oauth2client.client import (flow_from_clientsecrets,
                                  AccessTokenRefreshError)
 from oauth2client.file import Storage
 from oauth2client.tools import argparser, run_flow
-from utils import bytes_to_human, error_exit
-from tunetags import TuneTags
+
+import os, sys
+sys.path.append('./')
+
+from .utils import bytes_to_human, error_exit
+from .tunetags import TuneTags
 
 
 class Tune2Tube(object):
@@ -82,10 +86,10 @@ class Tune2Tube(object):
 
         # Always retry when these exceptions are raised.
         self.retriable_exceptions = (
-            httplib2.HttpLib2Error, IOError, httplib.NotConnected,
-            httplib.IncompleteRead, httplib.ImproperConnectionState,
-            httplib.CannotSendRequest, httplib.CannotSendHeader,
-            httplib.ResponseNotReady, httplib.BadStatusLine
+            httplib2.HttpLib2Error, IOError, http.client.NotConnected,
+            http.client.IncompleteRead, http.client.ImproperConnectionState,
+            http.client.CannotSendRequest, http.client.CannotSendHeader,
+            http.client.ResponseNotReady, http.client.BadStatusLine
         )
 
         # Always retry when an apiclient.errors.HttpError with one of these
@@ -169,7 +173,7 @@ the default is 10, Music).'''
         argparser.add_argument(
             '--keywords',
             help='Comma-separated list of video keywords/tags.',
-            default=''
+            default='pk, prod_pk, beat, instrumental, rap beat, digicore, hyperpop, kesha, 2hollis, nate sib, ken carson, playboi carti, lil uzi vert, hyperpop beat, hyperpop instrumental, digicore beat, digicore instrumental, kesha beat, kesha instrumental, 2hollis beat, 2hollis instrumental, nate sib beat, nate sib instrumental, ken carson beat, ken carson instrumental, playboi carti beat, playboi carti instrumental, lil uzi vert beat, lil uzi vert instrumental'
         )
         mxgroup = argparser.add_mutually_exclusive_group()
         mxgroup.add_argument(
@@ -286,7 +290,7 @@ description (default: True).''',
         # Add the metadata tags to the description if needed.
         description = self.settings['description'].strip()
         if self.settings['add_metadata']:
-            if description is not '':
+            if description != '':
                 description += '\n'
             # Sort the list of metadata, so that items with linebreaks go last.
             metalist = [{
@@ -350,14 +354,14 @@ finish processing; typically 1-10 minutes.''')
                 else:
                     error_exit('''The upload failed with an unexpected \
 response: %s''' % response)
-            except HttpError, e:
+            except HttpError as e:
                 if e.resp.status in self.retriable_status_codes:
                     error = '''A retriable HTTP error %d occurred:\n%s''' % (
                         e.resp.status, e.content
                     )
                 else:
                     raise
-            except self.retriable_exceptions, e:
+            except self.retriable_exceptions as e:
                 error = 'A retriable error occurred: %s' % e
 
             if error is not None:
@@ -412,16 +416,16 @@ retrying...''' % sleep_seconds)
                 # We join the item in case it's still a list, as in the case
                 # of Vorbis.
                 if isinstance(item, (list, tuple)):
-                    item = [n for n in item if isinstance(n, (unicode))]
+                    item = [n for n in item if isinstance(n, (str))]
                     if item == []: continue
                     item = ''.join(item)
-                elif not isinstance(item, (unicode)):
+                elif not isinstance(item, (str)):
                     continue
                 self.settings['metadata'][self.tunetags.tag_lookup(tag)] = \
                     str(item)
 
         # Lift the actual track duration string out of the output.
-        duration = re.findall('Duration: (.+?),', probe_out)
+        duration = re.findall('Duration: (.+?),', probe_out.decode('utf-8'))
 
         # If we get valid output, parse the duration and get a seconds value.
         # Otherwise, stop the script.
@@ -545,20 +549,22 @@ Try again with -v (--verbose) to see what went wrong. \
         print('Authenticating using the Youtube API...')
         try:
             youtube = self.get_authenticated_service(args)
-        except httplib2.ServerNotFoundError, e:
+        except httplib2.ServerNotFoundError as e:
             error_exit('%s.' % e)
 
         try:
             self.initialize_upload(youtube, args, self.settings['path_output'])
-        except HttpError, e:
+        except HttpError as e:
             print('An HTTP error %d occurred:\n%s' % (
                 e.resp.status,
                 e.content
             ))
-        except AccessTokenRefreshError, e:
+        except AccessTokenRefreshError as e:
             print('''The stored access token seems to be invalid. Delete any \
 -oauth2.json files that may exist and try again, or try again with the \
 --no_stored_auth switch.''')
 
     def change_settings(self, overrides):
-        self.settings = dict(self.settings.items() + overrides.items())
+        # self.settings = dict(self.settings.items() + overrides.items())
+        # merged_dict = {**dict1, **dict2}
+        self.settings = {**self.settings, **overrides}
