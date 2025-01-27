@@ -16,7 +16,6 @@
 # or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 
-
 def bytes_to_human(n, bformat='%(value).1f %(symbol)s', symbols='customary'):
     '''
     Convert n bytes into a human readable string based on format.

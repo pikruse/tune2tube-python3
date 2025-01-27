@@ -126,11 +126,11 @@ for more details.
         # The argparser is initialized in oauth2client/tools.py. We're just
         # adding our own arguments to the ones already defined there.
         argparser.description = '''Generates a video from an image and audio \
-file and uploads it to Youtube.'''
+            file and uploads it to Youtube.'''
         argparser.epilog = '''A Youtube Data API client key is required to \
-use this script, as well as ffmpeg. For help on setting up these \
-dependencies, see this project\'s Github page \
-<http://github.com/msikma/tune2tube/> or the included README.md file.'''
+            use this script, as well as ffmpeg. For help on setting up these \
+            dependencies, see this project\'s Github page \
+            <http://github.com/pikruse/tune2tube-python3/> or the included README.md file.'''
         argparser.add_help = True
         # Manually add a help argument,
         # as it is turned off in oauth2client/tools.py.
@@ -173,7 +173,7 @@ the default is 10, Music).'''
         argparser.add_argument(
             '--keywords',
             help='Comma-separated list of video keywords/tags.',
-            default='pk, prod_pk, beat, instrumental, rap beat, digicore, hyperpop, kesha, 2hollis, nate sib, ken carson, playboi carti, lil uzi vert, hyperpop beat, hyperpop instrumental, digicore beat, digicore instrumental, kesha beat, kesha instrumental, 2hollis beat, 2hollis instrumental, nate sib beat, nate sib instrumental, ken carson beat, ken carson instrumental, playboi carti beat, playboi carti instrumental, lil uzi vert beat, lil uzi vert instrumental'
+            default='pk, prod_pk, beat, instrumental, rap beat, digicore, hyperpop, kesha, 2hollis, nate sib, ken carson, playboi carti, lil uzi vert'
         )
         mxgroup = argparser.add_mutually_exclusive_group()
         mxgroup.add_argument(
@@ -345,35 +345,33 @@ description (default: True).''',
             try:
                 status, response = insert_request.next_chunk()
                 if 'id' in response:
-                    print('''Video ID `%s' was successfully uploaded. \
-Its visibility is set to `%s'.''' % (response['id'], self.settings['privacy']))
-                    print('''URL of the newly uploaded video: \
-<https://www.youtube.com/watch?v=%s>''' % response['id'])
+                    print(f'''Video ID '{response['id']}' was successfully uploaded. \
+                          Its visibility is set to '{self.settings['privacy']}'.''')
+                    print(f'''URL of the newly uploaded video: \
+                          <https://www.youtube.com/watch?v={response['id']}>''')
                     print('''It may take some time for the video to \
-finish processing; typically 1-10 minutes.''')
+                          finish processing; typically 1-10 minutes.''')
                 else:
-                    error_exit('''The upload failed with an unexpected \
-response: %s''' % response)
+                    error_exit(f'''The upload failed with an unexpected \
+                               response: {response}''')
             except HttpError as e:
                 if e.resp.status in self.retriable_status_codes:
-                    error = '''A retriable HTTP error %d occurred:\n%s''' % (
-                        e.resp.status, e.content
-                    )
+                    error = f'''A retriable HTTP error {e.resp.status} occurred:\n{e.content}'''
                 else:
                     raise
             except self.retriable_exceptions as e:
-                error = 'A retriable error occurred: %s' % e
+                error = 'A retriable error occurred: {e}'
 
             if error is not None:
                 print(error)
                 retry += 1
                 if retry > self.max_retries:
                     error_exit('''Too many upload errors. No longer \
-attempting to retry.''')
+                               attempting to retry.''')
                 max_sleep = 2 ** retry
                 sleep_seconds = random.random() * max_sleep
-                print('''Sleeping %f seconds and then \
-retrying...''' % sleep_seconds)
+                print(f'''Sleeping {sleep_seconds:f} seconds and then \
+                      retrying...''')
                 time.sleep(sleep_seconds)
 
     def generate_video(self, audio, image):
@@ -398,7 +396,7 @@ retrying...''' % sleep_seconds)
                 print(probe_out)
         except:
             error_exit('''couldn't probe the audio file \
-(ffprobe might not be available)''')
+                       (ffprobe might not be available)''')
 
         # Try to extract some metadata from the file using Mutagen.
         try:
@@ -433,7 +431,7 @@ retrying...''' % sleep_seconds)
             duration = duration[0]
         else:
             error_exit('''couldn't parse ffprobe's output. Try again with \
--v (--verbose) to see what went wrong.''')
+                       -v (--verbose) to see what went wrong.''')
 
         # Turn the string into a datetime format.
         try:
@@ -445,28 +443,18 @@ retrying...''' % sleep_seconds)
                 microseconds=audio_info.microsecond
             )
         except ValueError:
-            error_exit('''encountered an error trying to determine the \
-duration of the audio file. It could be in an unrecognized format, or \
-longer than 24 hours. (Duration: %s, exception: %s)''' % (
-                duration, sys.exc_info()[0]
-            ))
+            error_exit(f'''encountered an error trying to determine the \
+                       duration of the audio file. It could be in an unrecognized format, or \
+                       longer than 24 hours. (Duration: {duration}, exception: {sys.exc_info()[0]})''' 
+            )
 
-        print('Using image file `%s\', size: %s.' % (
-            image,
-            os.path.getsize(image)
-        ))
-        print('Using audio file `%s\', size: %s, duration: %s.' % (
-            audio,
-            os.path.getsize(audio),
-            duration
-        ))
+        print(f'Using image file `{image}`, size: {os.path.getsize(image)}.')
+        print(f'Using audio file `{audio}`, size:{os.path.getsize(audio)}, duration: {duration}.')
 
         if self.settings['metadata'] == []:
             print("Couldn't extract audio file tags. Continuing.")
         else:
-            print('Extracted %d tag(s) from the audio file.' % len(
-                self.settings['metadata']
-            ))
+            print(f'Extracted {len(self.settings['metadata'])} tag(s) from the audio file.')
 
         print('Encoding video file...')
 
