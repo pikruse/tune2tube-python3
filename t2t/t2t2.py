@@ -42,7 +42,7 @@ from oauth2client.tools import argparser, run_flow
 import os, sys
 sys.path.append('./')
 
-from .utils import bytes_to_human, error_exit
+from .utils import bytes_to_human, error_exit, get_beat_name, get_prod_name
 from .tunetags import TuneTags
 
 
@@ -150,25 +150,25 @@ for more details.
         argparser.add_argument(
             '--output',
             help='''Save the output video (.MP4) to a file rather than \
-uploading it to Youtube.'''
+                uploading it to Youtube.'''
         )
         argparser.add_argument(
             '--cs_json',
             help='''Path to the client secrets json file \
-(default: client_secrets.json).''',
+                (default: client_secrets.json).''',
             default='client_secrets.json'
         )
         argparser.add_argument(
             '--privacy',
             choices=self.valid_privacy_statuses,
             help='Privacy status of the video (default: unlisted).',
-            default='unlisted'
+            default='public'
         )
         argparser.add_argument(
             '--category',
             default='10',
             help='''Numeric video category (see the Github wiki for a list; \
-the default is 10, Music).'''
+                the default is 10, Music).'''
         )
         argparser.add_argument(
             '--keywords',
@@ -178,22 +178,22 @@ the default is 10, Music).'''
         mxgroup = argparser.add_mutually_exclusive_group()
         mxgroup.add_argument(
             '--title',
-            help='''Video title string (default: \'%s\'). If neither --title \
-nor --title_vars is specified, --title_vars will be used with its default \
-value, unless this would result in \
-an empty title.''' % self.settings['default_title']
+            help=f'''Video title string (default: \'{self.settings['default_title']}\'). If neither --title \
+                nor --title_vars is specified, --title_vars will be used with its default \
+                value, unless this would result in \
+                an empty title.'''
         )
         mxgroup.add_argument(
             '--title_vars',
             nargs='?',
-            help='''Comma-separated list of metadata variables to use as \
-the video title (default: %s).''' % self.settings['default_title_vars']
-        )
+            help=f'''Comma-separated list of metadata variables to use as \
+                the video title (default: {self.settings['default_title_vars']}).''' 
+            )
         argparser.add_argument(
             '--title_sep',
             help='''Separator for the title variables (default: \' - \', \
-yielding e.g. \'Artist - Title\'). Ignored if \
-using --title_str.''',
+                yielding e.g. \'Artist - Title\'). Ignored if \
+                    using --title_str.''',
             default=' - '
         )
         argparser.add_argument(
@@ -205,7 +205,7 @@ using --title_str.''',
         argparser.add_argument(
             '--add_metadata',
             help='''Adds a list of audio file metadata to the \
-description (default: True).''',
+                description (default: True).''',
             default=True
         )
         argparser.add_argument(

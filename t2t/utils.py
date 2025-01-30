@@ -50,3 +50,24 @@ def error_exit(str='unknown error'):
     '''
     print('tune2tube.py: error: %(str)s' % {'str': str})
     exit()
+
+def get_beat_name(filename: str) -> str:
+    '''
+    Returns the name of the beat.
+    '''
+    split = filename.split(' ')
+    name = split[0]
+    
+    return name
+
+def get_prod_name(filename: str) -> str:
+    '''
+    Returns the name of the producer(s).
+    '''
+    split = filename.split(' ')
+
+    # split after beat name and bpm
+    names = split[2:]
+    name = ' '.join(names)
+    
+    return name
